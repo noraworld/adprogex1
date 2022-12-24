@@ -1,0 +1,817 @@
+httperf(1)                                                          httperf(1)
+
+
+
+NNAAMMEE
+       httperf - HTTP performance measurement tool
+
+SSYYNNOOPPSSIISS
+       hhttttppeerrff  [----aadddd--hheeaaddeerr  _S]  [----bbuurrsstt--lleennggtthh _N] [----cclliieenntt _I/_N] [----cclloossee--
+       wwiitthh--rreesseett] [--dd|----ddeebbuugg _N]  [----ffaaiilluurree--ssttaattuuss  _N]  [--hh|----hheellpp]  [----hhoogg]
+       [----hhttttpp--vveerrssiioonn   _S]   [----mmaaxx--ccoonnnneeccttiioonnss   _N]   [----mmaaxx--ppiippeedd--ccaallllss  _N]
+       [----mmeetthhoodd _S] [----nnoo--hhoosstt--hhddrr] [----nnuumm--ccaallllss _N] [----nnuumm--ccoonnnnss _N]  [----ppeerriioodd
+       [dd|uu|ee]_T_1[,,_T_2]]  [----ppoorrtt  _N]  [----pprriinntt--rreeppllyy  [hheeaaddeerr|bbooddyy]]]  [----pprriinntt--
+       rreeqquueesstt [hheeaaddeerr|bbooddyy]]] [----rraattee _X] [----rreeccvv--bbuuffffeerr  _N]  [----rreettrryy--oonn--ffaaiill--
+       uurree]  [----sseenndd--bbuuffffeerr  _N]  [----sseerrvveerr  _S]  [----sseerrvveerr--nnaammee  _S] [----sseessssiioonn--
+       ccooookkiiee] [----ssssll] [----ssssll--cciipphheerrss _L] [----ssssll--nnoo--rreeuussee] [----tthhiinnkk--ttiimmeeoouutt  _X]
+       [----ttiimmeeoouutt  _X]  [----uurrii  _S] [--vv|----vveerrbboossee] [--VV|----vveerrssiioonn] [----wwlloogg yy|nn,,_F]
+       [----wwsseessss _N,_N,_X] [----wwsseesssslloogg _N,_X,_F] [----wwsseett _N,_X]
+
+DDEESSCCRRIIPPTTIIOONN
+       hhttttppeerrff is a tool to measure web server  performance.   It  speaks  the
+       HTTP  protocol  both  in its HTTP/1.0 and HTTP/1.1 flavors and offers a
+       variety of workload generators. While running, it keeps track of a num-
+       ber  of  performance metrics that are summarized in the form of statis-
+       tics that are printed at the end of a test run.  The most basic  opera-
+       tion  of hhttttppeerrff is to generate a fixed number of HTTP GET requests and
+       to measure how many replies (responses) came back from the  server  and
+       at what rate the responses arrived.
+
+       IIMMPPOORRTTAANNTT::  To  obtain  correct results, it is necessary to run at most
+       one hhttttppeerrff process per client machine.  Also, there should be  as  few
+       background  processes  as  possible  both  on  the  client  and  server
+       machines.
+
+
+EEXXAAMMPPLLEESS
+       httperf --hog --server www
+              This command causes hhttttppeerrff to create a connection to host  www,
+              send  a request for the root document (http://www/), receive the
+              reply, close the connection, and  then  print  some  performance
+              statistics.
+
+       httperf --hog --server www --num-conn 100 --ra 10 --timeout 5
+              Like  above,  except that a total of 100 connections are created
+              and that connections are created at a fixed rate of 10 per  sec-
+              ond.   Note  that  option  ¡Æ¡Æ--rate¡Ç¡Ç  has  been  abbreviated to
+              ¡Æ¡Æ--ra¡Ç¡Ç.
+
+       httperf --hog --server=www --wsess=10,5,2 --rate 1 --timeout 5
+              Causes hhttttppeerrff to generate a total of 10 sessions at a rate of 1
+              session  per  second.  Each session consists of 5 calls that are
+              spaced out by 2 seconds.
+
+       httperf --hog --server=www --wsess=10,5,2 --rate=1 --timeout=5 --ssl
+              Like above, except that hhttttppeerrff contacts server www via  SSL  at
+              port 443 (the default port for SSL connections).
+
+       httperf  --hog  --server  www --wsess=10,5,2 --rate=1 --timeout=5 --ssl
+       --ssl-ciphers=EXP-RC4-MD5:EXP-RC2-CBC-MD5  --ssl-no-reuse   --http-ver-
+       sion=1.0
+              Like  above,  except that hhttttppeerrff will inform the server that it
+              can only select from two  cipher  suites  (EXP-RC4-MD5  or  EXP-
+              RC2-CBC-MD5);  furthermore,  hhttttppeerrff  will  use HTTP version 1.0
+              which requires a new TCP connection for each request.  Also, SSL
+              session  ids are not reused, so the entire SSL connection estab-
+              lishment process (known as the SSL handshake)  occurs  for  each
+              connection.
+
+OOPPTTIIOONNSS
+       The operation of hhttttppeerrff can be controlled through a number of options.
+       The tool supports  both  short  (one-character)  and  long  (arbitrary-
+       length) option names.  Short options are prefixed with a single leading
+       dash (-), long options with a double-dash (--).  Multiple short options
+       can  be grouped together (e.g., ¡Æ¡Æ--vvVV¡Ç¡Ç is equivalent to ¡Æ¡Æ--vv --VV¡Ç¡Ç) and
+       long options can be abbreviated so long as they remain unique.  Parame-
+       ters  to  options  can be specified either by following the long option
+       name with an equal sign and the parameter value (e.g.,  ----bbuurrsstt==1100)  or
+       by  separating the option name and value with whitespace (e.g., ----bbuurrsstt
+       1100).
+
+       ----aadddd--hheeaaddeerr==_S
+              Specifies to include string _S as an additional  request  header.
+              It is necessary to specify the terminating carriage-return/line-
+              feed sequence explicitly.  This can be done by using the  escape
+              sequence  ¡Æ¡Æ\n¡Ç¡Ç.   This  makes  it possible to include multiple
+              request  headers.    For   example,   ¡Æ¡Æ--add-header   "Referer:
+              foo\nAuth:  secret\n"¡Ç¡Ç  would  add  two request headers (¡Æ¡ÆRef-
+              erer¡Ç¡Ç and ¡Æ¡ÆAuth¡Ç¡Ç) to each request.   Other  supported  escape
+              sequences  are  ¡Æ¡Æ\r¡Ç¡Ç  (carriage-return),  ¡Æ¡Æ\a¡Ç¡Ç  (line-feed),
+              ¡Æ¡Æ\\¡Ç¡Ç (backslash), and ¡Æ¡Æ\N¡Ç¡Ç where N is the code the character
+              to be inserted (in octal).
+
+       ----bbuurrsstt--lleennggtthh==_N
+              Specifies  the length of bursts.  Each burst consists of _N calls
+              to the server.  The exact meaning of this parameter  depends  on
+              the workload generator.  For regular request-oriented workloads,
+              see the description of option ----wwsseessss.
+
+       ----nnoo--hhoosstt--hhddrr
+              Specifies that the "Host:" header should not  be  included  when
+              issuing an HTTP request.
+
+       ----nnuumm--ccaallllss.
+              For  session-oriented  workloads,  see the description of option
+              ----wwsseessss.
+
+       ----cclliieenntt==_I//_N
+              Specifies that the machine hhttttppeerrff is running on is client _I out
+              of  a  total  of  _N clients.  _I should be in the range from 0 to
+              _N-1.  Some of the workload generators  (e.g.,  ----wwsseett))  use  the
+              client  identity  as a bias value to ensure that not all clients
+              generate perfectly identical workloads.  When performing a  test
+              that  involves  several  client machines, it is generally a good
+              idea to specify this option.
+
+       ----cclloossee--wwiitthh--rreesseett
+              Requests that hhttttppeerrff closes TCP connections by sending a  RESET
+              instead  of  going  through  the  normal TCP connection shutdown
+              handshake.  Turning on this option can have ill effects such  as
+              data  corruption,  stuck  TCP  control blocks, or wrong results.
+              For this reason, the option should not be used unless absolutely
+              necessary  and even then it should not be used unless its impli-
+              cations are fully understood.
+
+       --dd==_N
+
+       ----ddeebbuugg==_N
+              Set debug level to _N.  Larger values of _N will  result  in  more
+              output.
+
+       ----ffaaiilluurree--ssttaattuuss==_N
+              Specifies  that  an  HTTP  response  status  code of _N should be
+              treated as a failure (i.e., treated as if the request had  timed
+              out,  for  example).  For example, with ¡Æ¡Æ----ffaaiilluurree--ssttaattuuss==550044¡Ç¡Ç
+              responses with an HTTP status of ¡Æ¡Æ504 Gateway Time-out¡Ç¡Ç  would
+              be  considered  failures.  Caveat: this option is currently sup-
+              ported for session workloads only (see the ----wwsseessss and  ----wwsseessss--
+              lloogg options).
+
+       --hh
+
+       ----hheellpp Prints a summary of available options and their parameters.
+
+       ----hhoogg  This  option  requests to use up as many TCP ports as necessary.
+              Without this option,  hhttttppeerrff  is  typically  limited  to  using
+              ephemeral  ports (in the range from 1024 to 5000).  This limited
+              port range can quickly become a bottleneck so it is generally  a
+              good  idea  to  specify  this option for serious testing.  Also,
+              this option must be specified when measuring NT servers since it
+              avoids a TCP incompatibility between NT and UNIX machines.
+
+       ----hhttttpp--vveerrssiioonn==_S
+              Specifies  the  version  string  that  should be included in the
+              requests sent to the server.  By default, version string ¡Æ¡Æ1.1¡Ç¡Ç
+              is used.  This option can be set to ¡Æ¡Æ1.0¡Ç¡Ç to force the genera-
+              tion of HTTP/1.0 requests.  Setting this  option  to  any  value
+              other  than ¡Æ¡Æ1.0¡Ç¡Ç or ¡Æ¡Æ1.1¡Ç¡Ç may result in undefined behavior.
+
+       ----mmaaxx--ccoonnnneeccttiioonnss==_N
+              Specifies that at most _N connections are opened  for  each  ses-
+              sion.   This  option  is  meaningful in conjunction with options
+              ----wwsseessss and ----wwsseesssslloogg only.
+
+       ----mmaaxx--ppiippeedd--ccaallllss==_N
+              Specifies that at most _N pipelined calls are issued on each con-
+              nection.   This option is meaningful in conjunction with options
+              ----wwsseessss and ----wwsseesssslloogg only.
+
+       ----mmeetthhoodd==_S
+              Specifies the method that should be used when  issuing  an  HTTP
+              request.   If  this  option  is not specified, the GET method is
+              used.  The method _S can be an arbitrary string  but  is  usually
+              one of GET, HEAD, PUT, POST, etc.
+
+       ----nnuumm--ccaallllss==_N
+              This  option  is meaningful for request-oriented workloads only.
+              It specifies the total number of calls to issue on each  connec-
+              tion before closing it.  If _N is greater than 1, the server must
+              support persistent connections.   The  default  value  for  this
+              option  is  1.   If ----bbuurrsstt--lleennggtthh is set to _B, then the _N calls
+              are issued in bursts of _B pipelined calls each.  Thus, the total
+              number of such bursts will be _N_/_B (per connection).
+
+       ----nnuumm--ccoonnnnss==_N
+              This  option  is meaningful for request-oriented workloads only.
+              It specifies the total number of connections to create.  On each
+              connection, calls are issued as specified by options ----nnuumm--ccaallllss
+              and ----bbuurrsstt--lleennggtthh.  A test stops as soon as the  _N  connections
+              have  either completed or failed.  A connection is considered to
+              have failed if any activity on the connection fails to make for-
+              ward  progress  for  more than the time specified by the timeout
+              options ----ttiimmeeoouutt and ----tthhiinnkk--ttiimmeeoouutt.  The  default  value  for
+              this option is 1.
+
+       ----ppeerriioodd==_[_D_]_T_1_[_,_T_2_]
+              Specifies  the time interval between the creation of connections
+              or sessions.  Connections are created by  default,  sessions  if
+              option  ----wwsseessss  or ----wwsseesssslloogg has been specified.  This connec-
+              tion/session ¡Æ¡Æinterarrival time¡Ç¡Ç can alternatively  be  speci-
+              fied   by  the  ----rraattee  option,  although  more  flexibility  is
+              available with ----ppeerriioodd..  The _D parameter specifies the interar-
+              rival  time  distribution.  If omitted or set to ¡Æ¡Ædd¡Ç¡Ç, a deter-
+              ministic (i.e., fixed) period is used as specified by  parameter
+              _T_1  in  units  of seconds.  If _D is set to ¡Æ¡Æee¡Ç¡Ç, an exponential
+              (i.e., Poisson) distribution is used with  a  mean  interarrival
+              time  of _T_1.  Finally, if _D is set to ¡Æ¡Æuu¡Ç¡Ç, a uniform distribu-
+              tion over the interval [_T_1,_T_2)  is  used  for  the  interarrival
+              time.   In  all  cases,  a period of 0 results in connections or
+              sessions being generated sequentially (a new  connection/session
+              is  initiated  as  soon  as  the  previous  one completes).  The
+              default value for this option is 0.  Note that  specifying,  for
+              example,  ----rraattee==55  is equivalent to specifying ----ppeerriioodd==dd00..22 or
+              ----ppeerriioodd==00..22.  By  specifying  ----ppeerriioodd==uu11,,33,  the  interarrival
+              times  will be randomly chosen from the interval between 1 and 3
+              seconds.  The specific sequence of (pseudo-)random  interarrival
+              times  are  identical from one hhttttppeerrff run to another as long as
+              the values for the ----ppeerriioodd and ----cclliieenntt options are  identical.
+
+       ----ppoorrtt==_N
+              This  option specifies the port number _N on which the web server
+              is listening for HTTP requests.  By default, hhttttppeerrff  uses  port
+              number 80.
+
+       ----pprriinntt--rreeppllyy[==[hheeaaddeerr|bbooddyy]]
+              Requests  the  printing of the reply headers, body, and summary.
+              The output is directed to standard output.  Reply  header  lines
+              are prefixed by "RH", reply body lines are prefixed by "RB", and
+              the reply-size summary is prefixed by "RS".  The prefix is  fol-
+              lowed  by a serial number that uniquely identifies the call that
+              the reply line is for and a colon (":") character that marks the
+              beginning  of  the actual reply line.  To print only reply head-
+              ers, pass argument hheeaaddeerr to this option.   To  print  only  the
+              reply body, pass argument bbooddyy to this option.
+
+       ----pprriinntt--rreeqquueesstt[==[hheeaaddeerr|bbooddyy]]
+              Requests  the  printing  of the request headers, body (if one is
+              present), and summary.  The output is directed to standard  out-
+              put.   Request  header  lines are prefixed by "SH", request body
+              lines are prefixed by "SB", and the request summary is  prefixed
+              by "SS".  The prefix is followed by the call¡Çs serial number and
+              a colon (":") character that marks the beginning of  the  actual
+              reply line.  To print only request headers, pass argument hheeaaddeerr
+              to this option.  To print only the request body,  pass  argument
+              bbooddyy to this option.
+
+       ----rraattee==_X
+              Specifies  the  fixed  rate at which connections or sessions are
+              created.  Connections are created by default, sessions if option
+              ----wwsseessss  or ----wwsseesssslloogg has been specified.  In both cases a rate
+              of 0 results in connections or sessions being generated  sequen-
+              tially  (a  new  session/connection  is initiated as soon as the
+              previous one completes).  The default value for this  option  is
+              0.
+
+       ----rreeccvv--bbuuffffeerr==_N
+              Specifies the maximum size of the socket receive buffers used to
+              receive HTTP replies.  By default, the limit is 16KB.  A smaller
+              value may help memory-constrained clients whereas a larger value
+              may be necessary when communicating with a server over  a  high-
+              bandwidth, high-latency connection.
+
+       ----rreettrryy--oonn--ffaaiilluurree
+              This  option  is  meaningful for session workloads only (see the
+              ----wwsseessss and ----wwsseesssslloogg options).   If  specified,  a  call  that
+              results  in a failure response (as defined by the ----ffaaiilluurree--ssttaa--
+              ttuuss option) is retried immediately instead of causing  the  ses-
+              sion to fail.
+
+       ----sseenndd--bbuuffffeerr==_N
+              Specifies  the  maximum  size of the socket send buffers used to
+              send HTTP requests.  By default, the limit is  4KB.   A  smaller
+              value may help memory-constrained clients whereas a larger value
+              may be necessary when generating large requests to a server con-
+              nected via a high-bandwidth, high-latency connection.
+
+       ----sseerrvveerr==_S
+              Specifies  the IP hostname of the server.  By default, the host-
+              name ¡Æ¡Ælocalhost¡Ç¡Ç is used.  This option should always be speci-
+              fied  as  it  is generally not a good idea to run the client and
+              the server on the same machine.
+
+       ----sseerrvveerr--nnaammee==_S
+              Specifies the (default) server name that appears in the  "Host:"
+              header  of  every request sent by hhttttppeerrff.  Without this option,
+              the host name (or IP address) specified by  option  ----sseerrvveerr  is
+              used instead.
+
+       ----sseessssiioonn--ccooookkiiee
+              When  this option is turned on, cookie managment is enabled on a
+              per-session basis.  What this means is that  if  a  reply  to  a
+              request  that was generated by session _X contains a cookie, then
+              all future requests sent by session _X will include  this  cookie
+              as  well.   At  present,  the cookie manager in hhttttppeerrff supports
+              only one cookie per session.  If a second  cookie  is  received,
+              the new cookie overwrites the existing one and a warning message
+              is printed if ¡Æ¡Æ--debug 1¡Ç¡Ç is on.
+
+       ----ssssll  Specifies that all communication between hhttttppeerrff and the  server
+              should  utilize  the  Secure Sockets Layer (SSL) protocol.  This
+              option is available only if hhttttppeerrff was compiled with  SSL  sup-
+              port enabled.
+
+       ----ssssll--cciipphheerrss==_L
+              This  option  is  only  meaningful  if  SSL is in use (see ----ssssll
+              option).  This option specifies the list _L of cipher suites that
+              hhttttppeerrff  may  use  in  negotiating  a secure connection with the
+              server.  If the list contains more than one  cipher  suite,  the
+              ciphers  must  be  separated by a colon.  If the server does not
+              accept any of the listed cipher suites,  the  connection  estab-
+              lishment  will  fail and hhttttppeerrff will exit immediately.  If this
+              option is not specified when the ----ssssll option  is  present  then
+              hhttttppeerrff  will use all of the SSLv3 cipher suites provided by the
+              underlying SSL library.
+
+       ----ssssll--nnoo--rreeuussee
+              This option is only meaningful if SSL and sessions  are  in  use
+              (see  ----ssssll,  ----wwsseessss,  ----wwsseesssslloogg).   When an SSL connection is
+              established the client receives a  session  identifier  (session
+              id)  from the server.  On subsequent SSL connections, the client
+              normally reuses this session id in order to avoid the expense of
+              repeating  the  (slow) SSL handshake to establish a new SSL ses-
+              sion and obtain another session id (even if the client  attempts
+              to re-use a session id, the server may force the client to rene-
+              gotiate a session).  By default hhttttppeerrff reuses  the  session  id
+              across  all  connections  in  a  session.  If the ----ssssll--nnoo--rreeuussee
+              option is in effect, then hhttttppeerrff will not reuse the session id,
+              and the entire SSL handshake will be performed for each new con-
+              nection in a session.
+
+       ----tthhiinnkk--ttiimmeeoouutt==_X
+              Specifies the maximum time that the server may need to  initiate
+              sending  the  reply for a given request.  Note that this timeout
+              value is added to the normal timeout value (see  option  ----ttiimmee--
+              oouutt).   When  accessing  static  web  content, it is usually not
+              necessary to specify  this  option.   However,  when  performing
+              tests  with long-running CGI scripts, it may be necessary to use
+              this option to allow for  larger  response-times.   The  default
+              value  for  this option is zero seconds, meaning that the server
+              has to be able to respond within the normal timeout value.
+
+       ----ttiimmeeoouutt==_X
+              Specifies the amount of time _X that hhttttppeerrff is willing  to  wait
+              for  a server reaction.  The timeout is specified in seconds and
+              can be a fractional number (e.g., ----ttiimmeeoouutt 33..55).  This  timeout
+              value is used when establishing a TCP connection, when sending a
+              request, when waiting for a reply, and when receiving  a  reply.
+              If  during  any of those activities a request fails to make for-
+              ward progress within the alloted  time,  hhttttppeerrff  considers  the
+              request  to  have died, closes the associated connection or ses-
+              sion and increases the  cclliieenntt--ttiimmoo  error  count.   The  actual
+              timeout  value  used when waiting for a reply is the sum of this
+              timeout and the think-timeout (see option ----tthhiinnkk--ttiimmeeoouutt).   By
+              default, the timeout value is infinity.
+
+       ----uurrii==_S
+              Specifies that URI _S should be accessed on the server.  For some
+              of the workload generators (e.g., ----wwsseett), this option specifies
+              the prefix for the URIs being accessed.
+
+       --vv
+
+       ----vveerrbboossee
+              Puts hhttttppeerrff into verbose mode.  In this mode, additional output
+              such as the individual reply rate samples and  connection  life-
+              time histogram are printed.
+
+       --VV
+
+       ----vveerrssiioonn
+              Prints the version of hhttttppeerrff.
+
+       ----wwlloogg==_B,,_F
+              This  option  can be used to generate a specific sequence of URI
+              accesses.  This is useful to replay the accesses recorded  in  a
+              server log file, for example.  Parameter _F is the name of a file
+              containing the ASCII NUL separated list of URIs that  should  be
+              accessed.   If  parameter  _B  is set to ¡Æ¡Æyy¡Ç¡Ç, hhttttppeerrff will wrap
+              around to the beginning of the file when reaching the end of the
+              list  (so  the list of URIs is accessed repeatedly).  With _B set
+              to ¡Æ¡Ænn¡Ç¡Ç, the test will stop no later than when reaching the end
+              of the URI list.
+
+       ----wwsseessss==_N_1,,_N_2,,_X
+              Requests  the  generation and measurement of sessions instead of
+              individual requests.  A session consists of a sequence of bursts
+              which  are  spaced  out by the user think-time.  Each burst con-
+              sists of a fixed number _L of calls to the server (_L is specified
+              by  option  ----bbuurrsstt--lleennggtthh).  The calls in a burst are issued as
+              follows: at first, a single call is issued.  Once the  reply  to
+              this  first call has been fully received, all remaining calls in
+              the burst are issued concurrently.   The  concurrent  calls  are
+              issued  either as pipelined calls on an existing persistent con-
+              nection or as individual calls on separate connections.  Whether
+              a  persistent  connection  is used depends on whether the server
+              responds to the first call with a reply that includes  a  ¡Æ¡ÆCon-
+              nection:  close¡Ç¡Ç header line.  If such a line is present, sepa-
+              rate connections are used.
+
+              The option specifies the following parameters: _N_1 is  the  total
+              number  of  sessions  to generate, _N_2 is the number of calls per
+              session,  and  _X  is  the  user  think-time  (in  seconds)  that
+              separates  consecutive  call  bursts.   For example, the options
+              ¡Æ¡Æ----wwsseessss==110000,,5500,,1100 ----bbuurrsstt--lleenn 55¡Ç¡Ç would result in 100 sessions
+              with a total of 50 calls each.  Since each burst has a length of
+              5 calls, a total of 10 call bursts would be generated  per  ses-
+              sion.   The user think-time between call bursts would be 10 sec-
+              onds.  Note that user think-time  _X  denotes  the  time  between
+              receiving  the  last  reply  of  the previous call burst and the
+              sending of the first request of the next burst.
+
+              A test involving sessions finishes as soon as the requested num-
+              ber  _N_1  of sessions have either failed or completed.  A session
+              is considered to have failed if any operation in a session takes
+              longer  than  the  timeouts  specified  by options ----ttiimmeeoouutt and
+              ----tthhiinnkk--ttiimmeeoouutt.  In addition,  a  session  also  fails  if  the
+              server returns a reply with a status code matching the one spec-
+              ified by option ----ffaaiilluurree--ssttaattuuss.
+
+       ----wwsseesssslloogg==_N,,_X,,_F
+              This specifies a session workload generator similar  to  ----wwsseessss
+              (please  read  that description first).  With ----wwsseesssslloogg though,
+              many aspects of user sessions, including the number and sequence
+              of  URI¡Çs,  request  method, think-time and burst-length parame-
+              ters, can be specified in an input file _F_.  Two other parameters
+              are  retained  from ----wwsseessss,, namely _N_, the number of sessions to
+              initiate, and _X_, the burst-to-burst user think time  (note  that
+              this  becomes  a  default  time  since the input file _F can also
+              specify user think time on a per-burst basis.  A  small  example
+              input file can most-easily show the settable parameters:
+
+              # Comment lines start with a ¡Æ¡Æ#¡Ç¡Ç as the first
+              # character.  Lines with only whitespace delimit
+              # sessions (multiple blank lines do not generate
+              # ¡Æ¡Ænull¡Ç¡Ç sessions).  All other lines specify a
+              # uri-sequence (1 uri per line).  If the first
+              # character of the line is whitespace (e.g. space
+              # or tab), the uri is considered to be part of a
+              # burst that is sent out after the previous
+              # non-burst uri.
+
+              # session 1 definition (this is a comment)
+              /foo.html think=2.0
+                   /pict1.gif
+                   /pict2.gif
+              /foo2.html method=POST contents=¡ÇPost data¡Ç
+                   /pict3.gif
+                   /pict4.gif
+
+              # session 2 definition
+              /foo3.html method=POST contents="Multiline\ndata"
+              /foo4.html method=HEAD
+
+              The  above  description specifies 2 sessions.  The first session
+              will start with a request for  /foo.html.   When  the  /foo.html
+              response   comes  back,  a  burst  of  2  requests  will  follow
+              (/pict1.gif and /pict2.gif).  When the last of  those  responses
+              is received, a two second user think time is inserted before the
+              next request of /foo2.html is issued.  This request is sent as a
+              POST.   The posted data can be contained between single- or dou-
+              ble-quotes.  Newlines can appear within posted data as ¡Æ¡Æ\n¡Ç¡Ç or
+              as  a ¡Æ¡Æ\<CR>¡Ç¡Ç.  The /foo2.html response is followed by a burst
+              request of /pict3.gif and /pict4.gif, which concludes this  ses-
+              sion.   The second session is started some time after the first,
+              as specified by the ----rraattee or ----ppeerriioodd options.
+
+              The second session consists  of  2  requests  separated  by  the
+              default  user  think time as specified by the _X parameter of the
+              ----wwsseesssslloogg option.  If the _N parameter of ----wwsseesssslloogg is  greater
+              than  the  number  of sessions defined in input file _F, then the
+              defined sessions are used repeatedly until _N sessions have  been
+              created  (i.e.,  the  defined sessions are used in a round-robin
+              fashion).
+
+              One should avoid using  ----wwsseesssslloogg  in  conjunction  with  other
+              hhttttppeerrff  options that also control session behavior and workload
+              URI¡Çs, namely ----bbuurrsstt--lleennggtthh,, ----wwsseessss,, ----wwlloogg,, and ----wwsseett..
+
+       ----wwsseett==_N,,_X
+              This option can be used to walk through a  list  of  URIs  at  a
+              given  rate.   Parameter _N specifies the number of distinct URIs
+              that should be generated and _X specifies the rate at  which  new
+              URIs  are accessed.  A rate of 00..2255 would mean that the same URI
+              would be accessed four times in a row before moving  on  to  the
+              next URI.  This type of access pattern is useful in generating a
+              workload that induces a relatively predictable amount of traffic
+              in  the  disk  I/O  subsystem  of the server (assuming _N and the
+              accessed files are big enough  to  exceed  the  server¡Çs  buffer
+              cache).   The  URIs  generated are of the form _p_r_e_f_i_x/_p_a_t_h.html,
+              where _p_r_e_f_i_x is the URI prefix specified by  option  ----wwsseett  and
+              _p_a_t_h  is  generated as follows: for the _i-th file in the working
+              set, write down _i in decimal, prefixing the number with as  many
+              zeroes  as  necessary to get a string that has as many digits as
+              _N-1.  Then insert a slash character  between  each  digit.   For
+              example,  the  103rd  file  in  a working set consisting of 1024
+              files would result in a path of ¡Æ¡Æ00//11//00//33¡Ç¡Ç.  Thus, if the  URI-
+              prefix  is  //wwsseett11002244,  then  the  URI  being  accessed would be
+              //wwsseett11002244//00//11//00//33..hhttmmll.  In other words, the files on the server
+              need to be organized as a 10ary tree.
+
+OOUUTTPPUUTT
+       This  section  describes  the statistics output at the end of each test
+       run.  The basic information shown below is printed independent  of  the
+       selected workload generator.
+
+              TToottaall:: connections 30000 requests 29997 replies 29997 test-dura-
+              tion 299.992 s
+
+              CCoonnnneeccttiioonn rraattee:: 100.0 conn/s  (10.0  ms/conn,  <=14  concurrent
+              connections)
+              CCoonnnneeccttiioonn  ttiimmee [[mmss]]:: min 1.4 avg 3.0 max 163.4 median 1.5 std-
+              dev 7.3
+              CCoonnnneeccttiioonn ttiimmee [[mmss]]:: connect 0.6
+              CCoonnnneeccttiioonn lleennggtthh [[rreepplliieess//ccoonnnn]]:: 1.000
+
+              RReeqquueesstt rraattee:: 100.0 req/s (10.0 ms/req)
+              RReeqquueesstt ssiizzee [[BB]]:: 75.0
+
+              RReeppllyy rraattee [[rreepplliieess//ss]]:: min 98.8 avg 100.0 max 101.2 stddev  0.3
+              (60 samples)
+              RReeppllyy ttiimmee [[mmss]]:: response 2.4 transfer 0.0
+              RReeppllyy  ssiizzee  [[BB]]::  header 242.0 content 1010.0 footer 0.0 (total
+              1252.0)
+              RReeppllyy ssttaattuuss:: 1xx=0 2xx=29997 3xx=0 4xx=0 5xx=0
+
+              CCPPUU ttiimmee [[ss]]:: user 94.31 system 205.26 (user 31.4% system  68.4%
+              total 99.9%)
+              NNeett II//OO:: 129.6 KB/s (1.1*10^6 bps)
+
+              EErrrroorrss::  total  3 client-timo 0 socket-timo 0 connrefused 3 con-
+              nreset 0
+              EErrrroorrss:: fd-unavail 0 addrunavail 0 ftab-full 0 other 0
+
+       There are six groups of statistics: overall results  (¡Æ¡ÆTotal¡Ç¡Ç),  con-
+       nection related results (¡Æ¡ÆConnection¡Ç¡Ç), results relating to the issu-
+       ing of HTTP requests (¡Æ¡ÆRequest¡Ç¡Ç), results  relating  to  the  replies
+       received from the server (¡Æ¡ÆReply¡Ç¡Ç), miscellaneous results relating to
+       the CPU (¡Æ¡ÆCPU¡Ç¡Ç) and network (¡Æ¡ÆNet I/O¡Ç¡Ç) utilization and,  last  but
+       not least, a summary of errors encountered (¡Æ¡ÆErrors¡Ç¡Ç).
+
+       Total Section
+              This  section summarizes how many TCP connections were initiated
+              by hhttttppeerrff, how many requests it sent out, how many  replies  it
+              received,  and what the total test duration was.  In the example
+              output shown above,  30,000  connections  were  created,  29,997
+              requests  were  sent  out and 29,997 replies were received.  The
+              duration of the test was almost exactly 5 minutes (300 seconds).
+
+       Connection Section
+              This section conveys information related to TCP connections gen-
+              erated by the tool.  Specifically, the ¡Æ¡ÆConnection rate¡Ç¡Ç  line
+              shows  that  new  connections  were initiated at a rate of 100.0
+              connections per second.  This rate corresponds to  a  period  of
+              10.0  milliseconds per connection.  The last number in this line
+              shows that at most 14 connections were open at any given time.
+
+              The  first  line  labeled  ¡Æ¡ÆConnection  time¡Ç¡Ç  gives  lifetime
+              statistics  for  successful connections.  The lifetime of a con-
+              nection is the time between a TCP connection  is  initiated  and
+              the  time  the connection is closed.  A connection is considered
+              successful if it had at least one call that  completed  success-
+              fully.  In the example output, the line indicates that the mini-
+              mum (¡Æ¡Æmin¡Ç¡Ç) connection  lifetime  was  1.4  milliseconds,  the
+              average  (¡Æ¡Æavg¡Ç¡Ç)  lifetime  was  3.0 milliseconds, the maximum
+              (¡Æ¡Æmax¡Ç¡Ç) was 163.4 milliseconds, the median (¡Æ¡Æmedian¡Ç¡Ç)  life-
+              time  was  1.5  milliseconds, and that the standard deviation of
+              the lifetimes was 7.3 milliseconds.  The median lifetime is com-
+              puted based on a histogram with one millisecond resolution and a
+              maximum lifetime of 100 seconds.  Thus, the median  is  accurate
+              to  within half a millisecond if at least half of the successful
+              connections have a lifetime of no more than 100 seconds.
+
+              The next statistic in this section is the average time  it  took
+              to  establish  a TCP connection.  Only successful TCP connection
+              establishments are counted.  In the  example,  the  second  line
+              labeled  ¡Æ¡ÆConnection time¡Ç¡Ç shows that, on average, it took 0.6
+              milliseconds to establish a connection.
+
+              The final line in this section is labeled ¡Æ¡ÆConnection length.¡Ç¡Ç
+              It  gives the average number of replies received on each connec-
+              tion that received at least one reply  (i.e.,  connections  that
+              failed  before  yielding the first reply are not counted).  This
+              number can be bigger than 1.0 due to persistent connections.
+
+       Request Section
+              The line labeled ¡Æ¡ÆRequest rate¡Ç¡Ç gives the rate at  which  HTTP
+              requests  were  issued and the period that this rate corresponds
+              to.  In the example above, the request rate was  100.0  requests
+              per  second, which corresponds to 10.0 milliseconds per request.
+              As long as no persistent connections are employed,  the  results
+              in  this section are very similar or identical to results in the
+              connection section.  However, when  persistent  connections  are
+              used,  several  calls can be performed on a single connection in
+              which case the results would be different.
+
+              The line labeled ¡Æ¡ÆRequest size¡Ç¡Ç gives the average size of  the
+              HTTP  requests  in  bytes.   In  the  example above, the average
+              request size was 75 bytes.
+
+       Reply Section
+              For simple measurements, this section is often the  most  inter-
+              esting  one  as  the  line  labeled ¡Æ¡ÆReply rate¡Ç¡Ç gives various
+              statistics for the  reply  rate.   In  the  example  above,  the
+              minimum  (¡Æ¡Æmin¡Ç¡Ç)  reply  rate was 98.8 replies per second, the
+              average (¡Æ¡Æavg¡Ç¡Ç) was 100 replies per second,  and  the  maximum
+              (¡Æ¡Æmax¡Ç¡Ç) rate was 101.2 replies per second.  The standard devi-
+              ation was 0.3 replies per second.  The number enclosed in paren-
+              theses  shows  that  60  reply  rate  samples were acquired.  At
+              present, hhttttppeerrff collects a rate sample once every five seconds.
+              To  obtain a meaningful standard deviation, it is recommended to
+              run tests long enough so at least thirty samples  are  obtained.
+              This corresponds to a test duration of at least 150 seconds.
+
+              The line labeled ¡Æ¡ÆReply Time¡Ç¡Ç gives information on how long it
+              took for the server to respond and how long it took  to  receive
+              the  reply.  In the example, it took on average 2.4 milliseconds
+              between sending the first byte of the request and receiving  the
+              first byte of the reply.  The time to ¡Æ¡Ætransfer¡Ç¡Ç, or read, the
+              reply was too short to be measured, so it shows up as zero.  The
+              is typical when the entire reply fits into a single TCP segment.
+
+              The next line, labeled ¡Æ¡ÆReply size¡Ç¡Ç contains statistics on the
+              average size of the replies---all numbers are in reported bytes.
+              Specifically, the line lists the average length of  reply  head-
+              ers,  the content, and footers (HTTP/1.1 uses footers to realize
+              the ¡Æ¡Æchunked¡Ç¡Ç transfer encoding).  For convenience, the  aver-
+              age total number of bytes in the replies is also given in paren-
+              theses.  In the example, the average header length  (¡Æ¡Æheader¡Ç¡Ç)
+              was 242 bytes, the average content length (¡Æ¡Æcontent¡Ç¡Ç) was 1010
+              bytes, and there were no footers (¡Æ¡Æfooter¡Ç¡Ç  length  is  zero).
+              The total reply length of 1252 bytes on average.
+
+              The  final line in this section is a histogram of the major sta-
+              tus codes received in the replies from the  server.   The  major
+              status  code  is  the ¡Æ¡Æhundreds¡Ç¡Ç-digit of the full HTTP status
+              code.  In the example, all 29,997 replies  had  a  major  status
+              code  of  2.  It¡Çs a good guess that all status codes were ¡Æ¡Æ200
+              OK¡Ç¡Ç but the information in the histogram is not detailed enough
+              to allow distinguishing status codes with the same major code.
+
+       Miscellaneous Section
+              This section starts with a summary of the CPU utilization on the
+              client machine.  In the example, the line labeled  ¡Æ¡ÆCPU  time¡Ç¡Ç
+              shows  that  94.31  seconds  were  spent  executing in user mode
+              (¡Æ¡Æuser¡Ç¡Ç), 205.26 seconds were spent executing in  system  mode
+              (¡Æ¡Æsystem¡Ç¡Ç) and that this corresponds to 31.4% user mode execu-
+              tion and 68.4% system  execution.   The  total  utilization  was
+              99.9%,  which  is  expected  given that hhttttppeerrff is a CPU hog.  A
+              total CPU utilization of significantly less than 100% is a  sign
+              that  there  were  competing  processes that interfered with the
+              test.
+
+              The line labeled ¡Æ¡ÆNet I/O¡Ç¡Ç gives the average network  through-
+              put in kilobytes per second (where a kilobyte is 1024 bytes) and
+              in megabits per second (where a megabit is 10^6 bits).   In  the
+              example,  an  average network usage of about 129.6 kilobytes per
+              second was sustained.  The number in parentheses shows that this
+              corresponds  to  about  1.1  megabits  per second.  This network
+              bandwidth is computed based on the  number  of  bytes  sent  and
+              received  on  the  TCP connections.  In other words, it does not
+              account for the network headers or TCP retransmissions that  may
+              have occurred.
+
+       Errors Section
+              The  last  section  contains  statistics on the errors that were
+              encountered during a  test.   In  the  example,  the  two  lines
+              labeled  ¡Æ¡ÆErrors¡Ç¡Ç show that there were a total of three errors
+              and that all three errors were due to  the  server  refusing  to
+              accept  a  connection  (¡Æ¡Æconnrefused¡Ç¡Ç).  A description of each
+              error counter follows:
+
+              cclliieenntt--ttiimmoo:: The number of times a session, connection, or  call
+              failed  due  to  a client timeout (as specified by the ----ttiimmeeoouutt
+              and ----tthhiinnkk--ttiimmeeoouutt) options.
+
+              ssoocckkeett--ttiimmoo:: The number of times a TCP connection failed with  a
+              socket-level timeout (ETIMEDOUT).
+
+              ccoonnnnrreeffuusseedd:: The number of times a TCP connection attempt failed
+              with a ¡Æ¡Æconnection refused by server¡Ç¡Ç error (ECONNREFUSED).
+
+              ccoonnnnrreesseett:: The number of times a TCP connection failed due to  a
+              RESET  from the server.  Typically, a RESET is received when the
+              client attempts to send data to the server at a time the  server
+              has  already  closed its end of the connection.  NT servers also
+              send RESETs when attempting to establish a new  connection  when
+              the listen queue is full.
+
+              ffdd--uunnaavvaaiill::  The  number of times the hhttttppeerrff process was out of
+              file descriptors.  Whenever this count  is  non-zero,  the  test
+              results  are  meaningless because the client was overloaded (see
+              section "CHOOSING TIMEOUT VALUES").
+
+              aaddddrruunnaavvaaiill:: The number of times the client was out of TCP  port
+              numbers  (EADDRNOTAVAIL).  This error should never occur.  If it
+              does, the results should be discarded.
+
+              ffttaabb--ffuullll:: The number of times the system¡Çs file descriptor  ta-
+              ble is full.  Again, this error should never occur.  If it does,
+              the results should be discarded.
+
+              ootthheerr:: The number of times some other type  of  error  occurred.
+              Whenever this counter is non-zero, it is necessary to track down
+              the real cause of the error.  To assist in doing  this,  hhttttppeerrff
+              prints  the  error code (errno) of the first unknown errors that
+              occurs during a test run.
+
+       When ----wwsseessss or ----wwsseesssslloogg is specified, hhttttppeerrff generates and measures
+       sessions  instead  of  individual  calls  and additional statistics are
+       printed at the end of a test.  An example output is shown below.
+
+              SSeessssiioonn rraattee [[sseessss//ss]]:: min 0.00 avg 0.59 max  2.40  stddev  0.37
+              (240/450)
+              SSeessssiioonn:: avg 6.45 connections/session
+              SSeessssiioonn lliiffeettiimmee [[ss]]:: 123.9
+              SSeessssiioonn ffaaiillttiimmee [[ss]]:: 58.5
+              SSeessssiioonn lleennggtthh hhiissttooggrraamm:: 4 7 4 ... 3 3 240
+
+       The  line labeled ¡Æ¡ÆSession rate¡Ç¡Ç shows the minium, average, and maxi-
+       mum rate at which sessions completed (based  on  a  5  second  sampling
+       interval).  It also shows the standard deviation of the session comple-
+       tion rate.  The numbers in parentheses show how many sessions succeeded
+       and  how many sessions were initiated.  In the example above, the mini-
+       mum, average, and maximum session completion rates were 0.00, 0.59, and
+       2.40  sessions  per  second,  respectively.  The standard deviation was
+       0.37 sessions per second and 240 out of 450 sessions completed success-
+       fully (210 failed due to errors such as timeouts).
+
+       The  next line, labeled ¡Æ¡ÆSession:¡Ç¡Ç shows the average length of a ses-
+       sion measured in connections.  In the example above, an average of 6.45
+       connections were required to complete a session.
+
+       The line labeled ¡Æ¡ÆSession lifetime¡Ç¡Ç gives the average time it took to
+       complete a successful session.  In the example above, it took an  aver-
+       age of 123.9 seconds.
+
+       The  line  labeled  ¡Æ¡ÆSession failtime¡Ç¡Ç gives the average time it took
+       before an unsuccessful session failed.  In the example above,  it  took
+       on average 58.5 seconds for a session to fail.
+
+       Finally,  the  line  labeled  ¡Æ¡ÆSession length histogram¡Ç¡Ç gives a his-
+       togram of the number of replies received by each session.  In the exam-
+       ple  above,  4  sessions ended after receiving no reply at all, 7 ended
+       after receiving one reply, and so on (the ellipsis indicates additional
+       histogram counts that were omitted from this manual for space reasons).
+       Note that this histogram does not distinguish  between  successful  and
+       failed sessions.
+
+
+CCHHOOOOSSIINNGG TTIIMMEEOOUUTT VVAALLUUEESS
+       Since  the  machine  that  hhttttppeerrff  runs  on  has  only a finite set of
+       resource available, it can not sustain  arbitrarily  high  HTTP  loads.
+       For  example, one limiting factor is that there are only roughly 60,000
+       TCP port numbers that can be in use at any given time.  Since  on  most
+       UNIX  systems  it  takes  one  minute  for a TCP connection to be fully
+       closed (leave the TIME_WAIT state), the maximum rate a client can  sus-
+       tain is at most 1,000 requests per second.
+
+       The  actual  sustainable  rate  is  often  much lower than that because
+       before running out of TCP ports, the machine is likely to  run  out  of
+       file descriptors (one file descriptor is used up for each open TCP con-
+       nection).  By default, HP-UX 10.20 allows 1,024 open  file  descriptors
+       per  process.  This means that without extra precautions, hhttttppeerrff could
+       potentially very quickly use up  all  available  file  descriptors,  at
+       which  point it could not induce any additional load on the server.  To
+       avoid this problem, hhttttppeerrff provides option ----ttiimmeeoouutt to set a  timeout
+       for  all communication with the server.  If the server does not respond
+       before the timeout expires, the client considers the corresponding ses-
+       sion,  connection,  or  call  to be ¡Æ¡Ædead,¡Ç¡Ç closes the associated TCP
+       connection, and increases the ¡Æ¡Æclient-timo¡Ç¡Ç error  count.   The  only
+       exception  to  this rule is that after sending an entire request to the
+       server, hhttttppeerrff allows the server to take some additional  time  before
+       it starts sending the reply.  This is to accommodate HTTP requests that
+       take a long time to complete on the server.  This  additional  time  is
+       called  the  ¡Æ¡Æserver  think  time¡Ç¡Ç  and  can  be  specified by option
+       ----tthhiinnkk--ttiimmeeoouutt.  By default, this additional think time is  zero  sec-
+       onds,  so  the  server  would  always  have  to respond within the time
+       alloted by option ----ttiimmeeoouutt.
+
+       Timeouts allow hhttttppeerrff to sustain high  offered  loads  even  when  the
+       server  is  overloaded.   For  example, with a timeout of 2 seconds and
+       assuming that 1,000 file-descriptors are available,  the  offered  load
+       could  be  up  to 500 requests per second (in practice, the sustainable
+       load is often somewhat smaller than the  theoretical  value).   On  the
+       downside,  timeouts  artificially truncate the connection lifetime dis-
+       tribution.  Thus, it is recommended to pick a timeout value that is  as
+       large  as  possible  yet  small  enough to allow sustaining the desired
+       offered rate.  A timeout as short as one second may be acceptable,  but
+       larger timeouts (5-10 seconds) are preferable.
+
+       It  is  important to keep in mind that timeouts do not guarantee that a
+       client can sustain a particular offered  load---there  are  many  other
+       potential  resource bottlenecks.  For example, in some cases the client
+       machine may simply run out of CPU time.  To ensure that  a  given  test
+       really measured the server¡Çs capabilities and not the client¡Çs, it is a
+       good idea to vary the number of machines participating in a  test.   If
+       observed  performance remains the same as the number of client machines
+       is varied, the test results are likely to be valid.
+
+AAUUTTHHOORR
+       hhttttppeerrff was developed by David Mosberger and was heavily influenced  by
+       an  earlier  tool written by Tai Jin.  Stephane Eranian contributed the
+       log-file based URI generator.  Dick Carter contributed  the  ----wwsseesssslloogg
+       workload  generator,  the  support  behind the ----ppeerriioodd option, and bug
+       fixes.  All four authors are with  Hewlett-Packard  Research  Laborato-
+       ries.
+
+BBUUGGSS
+       Probably  many.   Always be sure to double-check results and don¡Çt fall
+       prey to measuring client-performance instead of server performance!
+
+       The user-interface definitely could be  improved.   A  simple  workload
+       description  language  might be more suitable than the dozens of little
+       command-line options the tool has right now.
+
+
+
+                                  30 Oct 2000                       httperf(1)

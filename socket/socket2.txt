@@ -1,0 +1,26 @@
+1 GET / HTTP/1.1
+2 Host: localhost:8080
+3 User-Agent: Mozilla/5.0 (X11; Linux i686; rv:24.0) Gecko/20100101 Firefox/24.0
+4 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+5 Accept-Language: ja,en-us;q=0.7,en;q=0.3
+6 Accept-Encoding: gzip, deflate
+7 Connection: keep-alive
+
+・1行目の「GET」がメソッド、2~7行目のコロンの前がヘッダフィールド
+
+【メソッド】
+GET 指定されたURLのリソースを取り出す("/" はURL、HTTP/1.1 は HTTP のバージョン)
+【リクエストヘッダ】
+Host 要求しているオブジェクトがあるホストを示す(localhost)
+User-Agent クライアントのWebブラウザなどの情報を示す(使用しているブラウザ、OS、レンダリングエンジンなど)
+Accept クライアントの受け入れ可能コンテンツタイプを示す(HTML, XML など)
+Accept-Language クライアントの受け入れ可能言語を示す
+Accept-Encoding クライアントの受け入れ可能文字エンコーディングを示す
+【一般ヘッダ】
+Connection 中間システムが転送すべきでないヘッダのリストを示す
+
+【今回の参考サイト】
+HTTP通信のメソッドとヘッダの意味
+https://ja.wikipedia.org/wiki/Hypertext_Transfer_Protocol
+2回目以降に bind error になってしまう問題を解決
+http://www.ibm.com/developerworks/jp/linux/library/l-sockpit/
